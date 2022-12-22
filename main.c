@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "myfuncs.h"
 
 typedef struct {
@@ -7,8 +8,22 @@ typedef struct {
     float cit;
 } record;
 
+void createFile(FILE **fptr) {
+    char fname[25], fpath[255] = "D:\\University\\programming\\GitHub\\Practice_9\\";
+    printf("Enter the name of the file (max 20 characters):");
+    fgets(fname, 20, stdin);
+    fflush(stdin);
+    strtok(fname, "\n");        // delete \n character in the end
+    strcat(fname, ".myf");
+    strcat(fpath, fname);
+    if(*fptr = fopen(fpath, "a+b") == NULL) {
+        printf("Can't create file\n");
+    }
+}
+
 int main() {
     short choice;
+    FILE *fptr;
 
     do {
         printf("----MENU----\n");
@@ -22,8 +37,28 @@ int main() {
         printf("\t8 -> Insert sorted record into a file\n");
         printf("\t9 -> Close the program\n");
 
-        printf("Make your choice (Enter the number 1-9): ");
+        printf("Make your choice (Enter the number 1-9):");
         choose(&choice, 1, 9);
+
+        switch (choice) {
+            case 1:
+                createFile(&fptr);
+                break;
+            case 2:
+                break;
+            case 3:
+                break;
+            case 4:
+                break;
+            case 5:
+                break;
+            case 6:
+                break;
+            case 7:
+                break;
+            case 8:
+                break;
+        }
     } while (choice != 9);
     return 0;
 }
