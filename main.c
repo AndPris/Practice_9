@@ -2,13 +2,15 @@
 #include <string.h>
 #include "myfuncs.h"
 
+char signature[] = "Signature";
+
 typedef struct {
     char area[50];
     float square;
     float cit;
 } record;
 
-void createFile(FILE **fptr) {
+void createFile(FILE *fptr) {
     char fname[25], fpath[255] = "D:\\University\\programming\\GitHub\\Practice_9\\";
     printf("Enter the name of the file (max 20 characters):");
     fgets(fname, 20, stdin);
@@ -16,9 +18,16 @@ void createFile(FILE **fptr) {
     strtok(fname, "\n");        // delete \n character in the end
     strcat(fname, ".myf");
     strcat(fpath, fname);
-    if(*fptr = fopen(fpath, "a+b") == NULL) {
-        printf("Can't create file\n");
-    }
+
+   if((fptr = fopen(fpath, "rb")) != NULL) {
+        printf("This file exists\n");
+    } else {
+       if ((fptr = fopen(fpath, "w+b")) == NULL) {
+           printf("Can't create file\n");
+       }
+       fwrite(signature, sizeof(signature), 1, fptr);
+       fclose(fptr);
+   }
 }
 
 int main() {
@@ -39,7 +48,6 @@ int main() {
 
         printf("Make your choice (Enter the number 1-9):");
         choose(&choice, 1, 9);
-
         switch (choice) {
             case 1:
                 createFile(&fptr);
