@@ -10,24 +10,51 @@ typedef struct {
     float cit;
 } record;
 
-void createFile(FILE *fptr) {
-    char fname[25], fpath[255] = "D:\\University\\programming\\GitHub\\Practice_9\\";
+void getName (char fpath[]) {
+    char fname[25];
+    strcat(fpath, "D:\\University\\programming\\GitHub\\Practice_9\\");
     printf("Enter the name of the file (max 20 characters):");
     fgets(fname, 20, stdin);
     fflush(stdin);
     strtok(fname, "\n");        // delete \n character in the end
     strcat(fname, ".myf");
     strcat(fpath, fname);
+}
+
+void createFile(FILE *fptr) {
+    char fpath[255];
+    getName(fpath);
 
    if((fptr = fopen(fpath, "rb")) != NULL) {
         printf("This file exists\n");
-    } else {
+       fclose(fptr);
+   } else {
+       fclose(fptr);
        if ((fptr = fopen(fpath, "w+b")) == NULL) {
            printf("Can't create file\n");
        }
        fwrite(signature, sizeof(signature), 1, fptr);
+       printf("File is created successfully\n");
        fclose(fptr);
    }
+}
+
+void deleteFile() {
+    char fpath[255];
+    getName(fpath);
+
+    FILE *fptr;
+    if((fptr = fopen(fpath, "rb")) == NULL) {
+        printf("This file doesn't exists\n");
+        fclose(fptr);
+    } else {
+        fclose(fptr);
+        if ((remove(fpath)) == 0) {
+            printf("The file is deleted successfully\n");
+        } else {
+            printf("The file is not deleted\n");
+        }
+    }
 }
 
 int main() {
@@ -51,6 +78,8 @@ int main() {
         switch (choice) {
             case 1:
                 createFile(&fptr);
+                printf("Press any key to continue\n");
+                getchar();
                 break;
             case 2:
                 break;
@@ -59,6 +88,9 @@ int main() {
             case 4:
                 break;
             case 5:
+                deleteFile();
+                printf("Press any key to continue\n");
+                getchar();
                 break;
             case 6:
                 break;
