@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <malloc.h>
 #include "myfuncs.h"
 
 typedef struct {
@@ -8,6 +9,8 @@ typedef struct {
     float square;
     int population;
 } record;
+
+int lastSort = 0;
 
 void getName (char fpath[]) {
     char fname[25];
@@ -85,6 +88,7 @@ void makeRecord() {
 
             if ((fwrite(&rec, sizeof(record), 1, fptr)) != 0) {
                 printf("\nThe record is added successfully\n");
+                lastSort = 0;
             } else {
                 printf("\nError adding the record\n");
             }
@@ -246,8 +250,253 @@ void editRecord() {
     fclose(fptr);
 }
 
-void sortRecords() {
+void sortRecs(record *recs, int type, int par, int size) {
+    switch (par) {
+        case 1:
+            if(type == 1) {
+                for(int i = 0; i < size-1; i++) {
+                    for(int j = i + 1; j < size; j++) {
+                        if ((recs + i)->id > (recs + j)->id) {
+                            record temp = *(recs+j);
+                            *(recs+j) = *(recs+i);
+                            *(recs+i) = temp;
+                        }
+                    }
+                }
+                lastSort = 1;
+            } else {
+                for(int i = 0; i < size-1; i++) {
+                    for(int j = i + 1; j < size; j++) {
+                        if ((recs + i)->id < (recs + j)->id) {
+                            record temp = *(recs+j);
+                            *(recs+j) = *(recs+i);
+                            *(recs+i) = temp;
+                        }
+                    }
+                }
+                lastSort = 2;
+            }
+            break;
+        case 2:
+            if(type == 1) {
+                for(int i = 0; i < size-1; i++) {
+                    for(int j = i + 1; j < size; j++) {
+                        if (strcmp((recs + i)->area, (recs + j)->area) > 0) {
+                            record temp = *(recs+j);
+                            *(recs+j) = *(recs+i);
+                            *(recs+i) = temp;
+                        }
+                    }
+                }
+                lastSort = 3;
+            } else {
+                for(int i = 0; i < size-1; i++) {
+                    for(int j = i + 1; j < size; j++) {
+                        if (strcmp((recs + i)->area, (recs + j)->area) < 0) {
+                            record temp = *(recs+j);
+                            *(recs+j) = *(recs+i);
+                            *(recs+i) = temp;
+                        }
+                    }
+                }
+                lastSort = 4;
+            }
+            break;
+        case 3:
+            if(type == 1) {
+                for(int i = 0; i < size-1; i++) {
+                    for(int j = i + 1; j < size; j++) {
+                        if ((recs + i)->square > (recs + j)->square) {
+                            record temp = *(recs+j);
+                            *(recs+j) = *(recs+i);
+                            *(recs+i) = temp;
+                        }
+                    }
+                }
+                lastSort = 5;
+            } else {
+                for(int i = 0; i < size-1; i++) {
+                    for(int j = i + 1; j < size; j++) {
+                        if ((recs + i)->square < (recs + j)->square) {
+                            record temp = *(recs+j);
+                            *(recs+j) = *(recs+i);
+                            *(recs+i) = temp;
+                        }
+                    }
+                }
+                lastSort = 6;
+            }
+            break;
+        case 4:
+            if(type == 1) {
+                for(int i = 0; i < size-1; i++) {
+                    for(int j = i + 1; j < size; j++) {
+                        if ((recs + i)->population > (recs + j)->population) {
+                            record temp = *(recs+j);
+                            *(recs+j) = *(recs+i);
+                            *(recs+i) = temp;
+                        }
+                    }
+                }
+                lastSort = 7;
+            } else {
+                for(int i = 0; i < size-1; i++) {
+                    for(int j = i + 1; j < size; j++) {
+                        if ((recs + i)->population < (recs + j)->population) {
+                            record temp = *(recs+j);
+                            *(recs+j) = *(recs+i);
+                            *(recs+i) = temp;
+                        }
+                    }
+                }
+                lastSort = 8;
+            }
+            break;
+    }
+}
 
+int sortRecords() {
+    char fpath[255];
+    FILE *fptr;
+
+    getName(fpath);
+
+    if((fptr = fopen(fpath, "r+b")) == NULL) {
+        printf("\nThis file doesn't exists or you don't have an access to it\n");
+        fclose(fptr);
+    } else {
+        int i;
+        int sort;
+        int parameter;
+        int n = 0;
+        record *recs;
+        record edit;
+
+        while ((fread(&edit, sizeof(record), 1, fptr)) != NULL) {
+            n++;
+        }
+        recs = (record*) malloc(n * sizeof(record));
+        if(recs==NULL) {
+            printf("Impossible to sort");
+            return 0;
+        }
+
+        printf("\nEnter 1 to sort from the smallest one to the biggest or 2 to sort vise versa:");
+        choose(&sort, 1, 2);
+        printf("\nEnter 1 to sort by id, 2 - by area, 3 - by square or 4 - by population:");
+        choose(&parameter, 1, 4);
+
+        i = 0;
+        rewind(fptr);
+        while ((fread(&edit, sizeof(record), 1, fptr)) != NULL) {
+            *(recs+i) = edit;
+            i++;
+        }
+
+        sortRecs(recs, sort, parameter, n);
+
+        fclose(fptr);
+        if((fptr = fopen(fpath, "wb")) == NULL) {
+            printf("\nCan't sort records\n");
+            fclose(fptr);
+        } else {
+            for(i = 0; i < n; i++) {
+                fwrite((recs + i), sizeof(record), 1, fptr);
+            }
+            printf("\nFile is sorted successfully\n");
+        }
+        free(recs);
+    }
+    fclose(fptr);
+}
+
+int insertRecord() {
+    char fpath[255];
+    FILE *fptr;
+
+    getName(fpath);
+    if(lastSort == 0) {
+        printf("\nThe file is not sorted at the moment\n");
+        return 0;
+    }
+    if((fptr = fopen(fpath, "r+b")) == NULL) {
+        printf("\nThis file doesn't exists or you don't have an access to it\n");
+        fclose(fptr);
+    } else {
+        record rec;
+        record *recs;
+        record edit;
+        int n = 0;
+        int i;
+
+        printf("\nEnter the id of the area:");
+        intInput(&rec.id);
+        printf("\nEnter the name of the area(max 50 characters):");
+        fgets(rec.area, 51, stdin);
+        fflush(stdin);
+        printf("\nEnter the square of the area:");
+        floatInput(&rec.square);
+        printf("\nEnter the population of the area:");
+        intInput(&rec.population);
+
+        rewind(fptr);
+        while ((fread(&edit, sizeof(record), 1, fptr)) != NULL) {
+            n++;
+        }
+        recs = (record*) malloc((n+1) * sizeof(record));
+        if(recs==NULL) {
+            printf("Impossible to sort");
+            return 0;
+        }
+
+        i = 0;
+        rewind(fptr);
+        while ((fread(&edit, sizeof(record), 1, fptr)) != NULL) {
+            *(recs+i) = edit;
+            i++;
+        }
+        *(recs+i) = rec;
+        switch (lastSort) {
+            case 1:
+                sortRecs(recs, 1, 1, (n+1));
+                break;
+            case 2:
+                sortRecs(recs, 2, 1, (n+1));
+                break;
+            case 3:
+                sortRecs(recs, 1, 2, (n+1));
+                break;
+            case 4:
+                sortRecs(recs, 2, 2, (n+1));
+                break;
+            case 5:
+                sortRecs(recs, 1, 3, (n+1));
+                break;
+            case 6:
+                sortRecs(recs, 2, 3, (n+1));
+                break;
+            case 7:
+                sortRecs(recs, 1, 4, (n+1));
+                break;
+            case 8:
+                sortRecs(recs, 2, 4, (n+1));
+                break;
+            }
+        fclose(fptr);
+        if((fptr = fopen(fpath, "wb")) == NULL) {
+            printf("\nCan't sort records\n");
+            fclose(fptr);
+        } else {
+            rewind(fptr);
+            for(i = 0; i < n+1; i++) {
+                fwrite((recs + i), sizeof(record), 1, fptr);
+            }
+            printf("\nRecord is added successfully\n");
+        }
+
+        free(recs);
+    }
+    fclose(fptr);
 }
 
 int main() {
@@ -304,6 +553,9 @@ int main() {
                 getchar();
                 break;
             case 8:
+                insertRecord();
+                printf("Press Enter to continue\n");
+                getchar();
                 break;
         }
     } while (menuChoice != 9);
