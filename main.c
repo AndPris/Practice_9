@@ -3,7 +3,8 @@
 #include "myfuncs.h"
 
 typedef struct {
-    char area[50];
+    int id;
+    char area[51];
     float square;
     int population;
 } record;
@@ -51,7 +52,7 @@ void readFile() {
             record data;
             fseek(fptr, 0, SEEK_SET);
             while((fread(&data, sizeof(record), 1, fptr)) != 0) {
-                printf("Area:%sSquare:%g\nPopulation:%d\n\n", data.area, data.square, data.population);
+                printf("Id:%d\nArea:%sSquare:%g\nPopulation:%d\n\n", data.id, data.area, data.square, data.population);
             }
         }
     }
@@ -72,7 +73,8 @@ void makeRecord() {
             printf("Can't open file\n");
         } else {
             record rec;
-
+            printf("\nEnter the id of the area:");
+            intInput(&rec.id);
             printf("\nEnter the name of the area(max 50 characters):");
             fgets(rec.area, 51, stdin);
             fflush(stdin);
@@ -90,6 +92,69 @@ void makeRecord() {
 
     }
 
+    fclose(fptr);
+}
+
+void deleteRecords() {
+    char fpath[255];
+    FILE *fptr;
+    getName(fpath);
+
+    if((fptr = fopen(fpath, "rb")) == NULL) {
+        printf("\nThis file doesn't exists or you don't have an access to it\n");
+    } else {
+        short delete;
+        printf("\nEnter 1 to delete one record or 2 to delete all the records:");
+        choose(&delete, 1, 2);
+        if(delete == 1) {
+            FILE *fptr_temp;
+            record edit;
+            int tempId;
+            short flag;
+            printf("\nEnter the id of the record you'd like to delete:");
+            intInput(&tempId);
+
+            if ((fptr_temp = fopen("D:\\University\\programming\\GitHub\\Practice_9\\copy.bin", "w+b")) == NULL) {
+                printf("Can't delete a record\n");
+                fclose(fptr_temp);
+                remove("D:\\University\\programming\\GitHub\\Practice_9\\copy.bin");
+            } else {
+                rewind(fptr);
+                while ((fread(&edit, sizeof(record), 1, fptr)) != NULL) {
+                    if (edit.id != tempId) {
+                        fwrite(&edit, sizeof(record), 1, fptr_temp);
+                    } else {
+                        flag = 1;
+                    }
+                }
+
+                if (!flag) {
+                    printf("\nThere is no record with such id\n");
+                    fclose(fptr_temp);
+                    remove("D:\\University\\programming\\GitHub\\Practice_9\\copy.bin");
+                } else {
+                    fclose(fptr);
+                    fptr = fopen(fpath, "wb");
+                    rewind(fptr_temp);
+                    rewind(fptr);
+                    while ((fread(&edit, sizeof(record), 1, fptr_temp)) != NULL) {
+                            fwrite(&edit, sizeof(record), 1, fptr);
+                    }
+                    fclose(fptr);
+                    fclose(fptr_temp);
+                    remove("D:\\University\\programming\\GitHub\\Practice_9\\copy.bin");
+                    printf("\nThe record is deleted successfully\n");
+                }
+            }
+        } else {
+            fclose(fptr);
+            if ((fptr = fopen(fpath, "wb")) == NULL) {
+                printf("Can't delete records\n");
+            } else {
+                printf("\nThe records are deleted successfully\n");
+            }
+        }
+    }
     fclose(fptr);
 }
 
@@ -111,8 +176,82 @@ void deleteFile() {
     }
 }
 
+void editRecord() {
+    char fpath[255];
+    FILE *fptr;
+    getName(fpath);
+
+    if((fptr = fopen(fpath, "r+b")) == NULL) {
+        printf("\nThis file doesn't exists or you don't have an access to it\n");
+    } else {
+        record edit;
+        int tempId;
+
+        printf("\nEnter the id of the record you'd like to edit:");
+        intInput(&tempId);
+
+        while(edit.id != tempId && !feof(fptr)) {
+            fread(&edit, sizeof(record), 1, fptr);
+        }
+
+        if(edit.id != tempId) {
+            printf("\nThere is no record with such id\n");
+        } else {
+            short editChoice;
+            do {
+                printf("\t----EDITING MENU----\n");
+                printf("\t1 -> Edit the id of the area:\n");
+                printf("\t2 -> Edit the name of the area\n");
+                printf("\t3 -> Edit the square of the area:\n");
+                printf("\t4 -> Edit the population of the area:\n");
+                printf("\t5 -> Stop editing\n");
+
+                printf("Make your choice (Enter the number 1-5):");
+                choose(&editChoice, 1, 5);
+                if(editChoice != 5) {
+                    switch (editChoice) {
+                        case 1:
+                            printf("\nEnter the new id:");
+                            intInput(&edit.id);
+                            printf("Press Enter to continue\n");
+                            getchar();
+                            break;
+                        case 2:
+                            printf("\nEnter the new name of the area (max 50 characters):");
+                            fgets(edit.area, 51, stdin);
+                            fflush(stdin);
+                            printf("Press Enter to continue\n");
+                            getchar();
+                            break;
+                        case 3:
+                            printf("\nEnter the new square of the area:");
+                            floatInput(&edit.square);
+                            printf("Press Enter to continue\n");
+                            getchar();
+                            break;
+                        case 4:
+                            printf("\nEnter the new population of the area:");
+                            intInput(&edit.population);
+                            printf("Press Enter to continue\n");
+                            getchar();
+                            break;
+                    }
+                    fseek(fptr, -sizeof(record), SEEK_CUR);
+                    fwrite(&edit, sizeof(record), 1, fptr);
+                }
+            } while(editChoice != 5);
+        }
+    }
+
+    fclose(fptr);
+}
+
+void sortRecords() {
+
+}
+
 int main() {
-    short choice;
+    short menuChoice;
 
     do {
         printf("\t----MENU----\n");
@@ -127,37 +266,46 @@ int main() {
         printf("\t9 -> Close the program\n");
 
         printf("Make your choice (Enter the number 1-9):");
-        choose(&choice, 1, 9);
-        switch (choice) {
+        choose(&menuChoice, 1, 9);
+        switch (menuChoice) {
             case 1:
                 createFile();
-                printf("Press any key to continue\n");
+                printf("Press Enter to continue\n");
                 getchar();
                 break;
             case 2:
                 readFile();
-                printf("Press any key to continue\n");
+                printf("Press Enter to continue\n");
                 getchar();
                 break;
             case 3:
                 makeRecord();
-                printf("Press any key to continue\n");
+                printf("Press Enter to continue\n");
                 getchar();
                 break;
             case 4:
+                deleteRecords();
+                printf("Press Enter to continue\n");
+                getchar();
                 break;
             case 5:
                 deleteFile();
-                printf("Press any key to continue\n");
+                printf("Press Enter to continue\n");
                 getchar();
                 break;
             case 6:
+                editRecord();
+                printf("Press Enter to continue\n");
+                getchar();
                 break;
             case 7:
+                sortRecords();
+                printf("Press Enter to continue\n");
+                getchar();
                 break;
             case 8:
                 break;
         }
-    } while (choice != 9);
+    } while (menuChoice != 9);
     return 0;
 }
